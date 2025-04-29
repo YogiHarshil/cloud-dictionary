@@ -1,21 +1,15 @@
 Serverless Cloud Dictionary Application Development Guide
 
 > This guide outlines the steps to develop a serverless cloud dictionary
-> application using AWS services (Lambda, API Gateway,
->
-> DynamoDB) and a React frontend hosted on AWS Amplify.
+> application using AWS services (Lambda, API Gateway, DynamoDB) and a React frontend hosted on AWS Amplify.
 >
 > Prerequisites
 >
 > AWS account with administrative access
->
 > Node.js (v16 or later) and npm installed
->
-> AWS CLI configured with credentials (aws configure)
->
+>AWS CLI configured with credentials (aws configure)
 > Basic knowledge of JavaScript, React, and AWS services
->
-> Git installed for version control
+>Git installed for version control
 >
 > Step 1: Set Up the Project Structure
 >
@@ -23,13 +17,11 @@ Serverless Cloud Dictionary Application Development Guide
 >
 > Create a root folder named cloud-dictionary.
 >
-> Inside it, create two subfolders: backend (for AWS Lambda and
-> DynamoDB) and frontend (for React app).
+> Inside it, create two subfolders: backend (for AWS Lambda and DynamoDB) and frontend (for React app).
 >
 > 2\. **Initialize** **Git** **Repository**:
 >
 > cd cloud-dictionary
->
 > git init
 >
 > 3\. **Create** **.gitignore**:
@@ -57,11 +49,7 @@ Serverless Cloud Dictionary Application Development Guide
 > In DynamoDB, add sample items manually or via script (example below).
 >
 > Example items:
->
-> term: "EC2", definition: "Elastic Compute Cloud, a scalable virtual
-> server
->
-> service."
+>term: "EC2", definition: "Elastic Compute Cloud, a scalable virtual server service."
 >
 > term: "S3", definition: "Simple Storage Service, an object storage
 > service."
@@ -73,140 +61,17 @@ Serverless Cloud Dictionary Application Development Guide
 > In the backend folder, initialize a Node.js project:
 >
 > cd backend
->
 > npm init -y
->
 > npm install aws-sdk
 
 2\. **Create** **Lambda** **Function** **for** **Search**:
 
 > Create a file searchTerms.js:
->
-> const AWS = require('aws-sdk');
->
-> const dynamoDB = new AWS.DynamoDB.DocumentClient();
->
-> exports.handler = async (event) =\> {
->
-> const query = event.queryStringParameters?.query \|\| '';
->
-> const params = {
->
-> TableName: 'CloudTerms',
->
-> FilterExpression: 'contains(#term, :query) OR contains(#definition,
-> :query)',
->
-> ExpressionAttributeNames: {
->
-> '#term': 'term',
->
-> '#definition': 'definition'
->
-> },
->
-> ExpressionAttributeValues: {
->
-> ':query': query.toLowerCase()
->
-> }
->
-> };
->
-> try {
->
-> const data = await dynamoDB.scan(params).promise();
->
-> return {
->
-> statusCode: 200,
->
-> headers: { 'Access-Control-Allow-Origin': '\*' },
->
-> body: JSON.stringify(data.Items)
->
-> };
->
-> } catch (error) {
->
-> return {
->
-> statusCode: 500,
->
-> headers: { 'Access-Control-Allow-Origin': '\*' },
->
-> body: JSON.stringify({ error: 'Could not retrieve terms' })
->
-> };
->
-> }
->
-> };
-
+> 
 3\. **Create** **Lambda** **Function** **for** **Get** **Term**:
 
 > Create a file getTerm.js:
 >
-> const AWS = require('aws-sdk');
->
-> const dynamoDB = new AWS.DynamoDB.DocumentClient();
->
-> exports.handler = async (event) =\> {
->
-> const term = event.pathParameters?.term;
->
-> const params = {
->
-> TableName: 'CloudTerms',
->
-> Key: { term }
->
-> };
->
-> try {
->
-> const data = await dynamoDB.get(params).promise();
->
-> if (!data.Item) {
->
-> return {
->
-> statusCode: 404,
->
-> headers: { 'Access-Control-Allow-Origin': '\*' },
->
-> body: JSON.stringify({ error: 'Term not found' })
->
-> };
->
-> }
->
-> return {
->
-> statusCode: 200,
->
-> headers: { 'Access-Control-Allow-Origin': '\*' },
->
-> body: JSON.stringify(data.Item)
->
-> };
->
-> } catch (error) {
->
-> return {
->
-> statusCode: 500,
->
-> headers: { 'Access-Control-Allow-Origin': '\*' },
->
-> body: JSON.stringify({ error: 'Could not retrieve term' })
->
-> };
->
-> }
->
-> };
-
 4\. **Package** **Lambda** **Functions**:
 
 > Zip each function:
@@ -219,20 +84,17 @@ Serverless Cloud Dictionary Application Development Guide
 
 > In AWS Console \> Lambda \> Create Function:
 >
-> Function name: SearchTerms, Runtime: Node.js 16.x, Upload
-> searchTerms.zip.
+> Function name: SearchTerms, Runtime: Node.js 16.x, Upload searchTerms.zip.
 >
 > Function name: GetTerm, Runtime: Node.js 16.x, Upload getTerm.zip.
 >
-> Add IAM role with AWSLambdaBasicExecutionRole and
-> AmazonDynamoDBReadOnlyAccess policies.
+> Add IAM role with AWSLambdaBasicExecutionRole and AmazonDynamoDBReadOnlyAccess policies.
 >
 > 2.3 Set Up API Gateway
 
 1\. **Create** **REST** **API**:
 
-> In AWS Console \> API Gateway \> Create API \> REST API \> Name:
-> CloudDictionaryAPI.
+> In AWS Console \> API Gateway \> Create API \> REST API \> Name: CloudDictionaryAPI.
 
 2\. **Create** **Resources** **and** **Methods**:
 
@@ -273,139 +135,11 @@ Serverless Cloud Dictionary Application Development Guide
 
 2\. **Configure** **Tailwind** **CSS**:
 
-> Update tailwind.config.js:
->
-> module.exports = {
->
-> content: \['./src/\*\*/\*.{js,jsx,ts,tsx}'\],
->
-> theme: { extend: {} },
->
-> plugins: \[\]
->
-> };
->
-> Update src/index.css:
->
-> @tailwind base;
->
-> @tailwind components;
->
-> @tailwind utilities;
-
 3\. **Create** **Search** **Component**:
-
-> Create src/components/Search.js:
->
-> import React, { useState } from 'react';
->
-> import axios from 'axios';
->
-> const Search = () =\> {
->
-> const \[query, setQuery\] = useState('');
->
-> const \[results, setResults\] = useState(\[\]);
->
-> const handleSearch = async () =\> {
->
-> try {
->
-> const response = await axios.get(
->
-> 'https://\<api-id\>.execute-api.\<region\>.amazonaws.com/prod/terms',
->
-> { params: { query } }
->
-> );
->
-> setResults(response.data);
->
-> } catch (error) {
->
-> console.error('Error searching terms:', error);
->
-> }
->
-> };
->
-> return (
->
-> \<div className="p-4"\>
->
-> \<input
->
-> type="text"
->
-> value={query}
->
-> onChange={(e) =\> setQuery(e.target.value)}
->
-> placeholder="Search cloud terms..."
->
-> className="border p-2 rounded w-full"
->
-> /\>
->
-> \<button
->
-> onClick={handleSearch}
->
-> className="bg-blue-500 text-white p-2 rounded mt-2"
->
-> \>
->
-> Search
->
-> \</button\>
->
-> \<ul className="mt-4"\>
->
-> {results.map((item) =\> (
->
-> \<li key={item.term} className="border-b py-2"\>
->
-> \<strong\>{item.term}\</strong\>: {item.definition}
->
-> \</li\>
->
-> ))}
->
-> \</ul\>
->
-> \</div\>
->
-> );
->
-> };
->
-> export default Search;
 
 4\. **Update** **App** **Component**:
 
 > Update src/App.js:
->
-> import React from 'react';
->
-> import Search from './components/Search';
->
-> function App() {
->
-> return (
->
-> \<div className="container mx-auto p-4"\>
->
-> \<h1 className="text-2xl font-bold mb-4"\>Cloud Dictionary\</h1\>
->
-> \<Search /\>
->
-> \</div\>
->
-> );
->
-> }
->
-> export default App;
 >
 > 3.2 Deploy Frontend with AWS Amplify
 
@@ -480,16 +214,6 @@ Serverless Cloud Dictionary Application Development Guide
 > Restrict CORS to the Amplify domain.
 >
 > Step 6: Version Control and CI/CD
-
-1\. **Commit** **Code** **to** **Git**:
-
-> git add .
->
-> git commit -m "Initial cloud dictionary application"
->
-> git remote add origin \<repository-url\>
->
-> git push origin main
 
 2\. **Set** **Up** **CI/CD** **with** **Amplify**:
 
