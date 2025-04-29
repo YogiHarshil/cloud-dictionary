@@ -1,5 +1,5 @@
-Serverless Cloud Dictionary Application Development Guide
-
+**Serverless Cloud Dictionary Application Development Guide
+**
 > This guide outlines the steps to develop a serverless cloud dictionary
 > application using AWS services (Lambda, API Gateway, DynamoDB) and a React frontend hosted on AWS Amplify.
 >
